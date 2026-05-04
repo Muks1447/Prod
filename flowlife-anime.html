@@ -1,0 +1,2593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FlowLife — 覚醒 AWAKENING</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Bangers&family=Noto+Sans+JP:wght@300;400;700;900&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+/* ═══════════════════════════════════════════════════════════
+   ANIME STYLE — ONE PIECE × BLACK CLOVER × BUNGO STRAY DOGS
+   Dark ink, gold power, crimson danger, electric blue magic
+═══════════════════════════════════════════════════════════ */
+:root {
+  --ink:        #080a0f;
+  --ink2:       #0d1018;
+  --ink3:       #12161f;
+  --panel:      #161b27;
+  --panel2:     #1c2235;
+  --panel3:     #222a40;
+  --stroke:     rgba(255,255,255,0.08);
+  --stroke2:    rgba(255,255,255,0.15);
+  --gold:       #f5c842;
+  --gold2:      #e8a020;
+  --gold-glow:  rgba(245,200,66,0.35);
+  --crimson:    #e63946;
+  --crimson2:   #ff6b6b;
+  --crimson-glow: rgba(230,57,70,0.3);
+  --electric:   #00d4ff;
+  --electric2:  #7efff5;
+  --elec-glow:  rgba(0,212,255,0.25);
+  --magic:      #9b5de5;
+  --magic2:     #c77dff;
+  --magic-glow: rgba(155,93,229,0.3);
+  --sakura:     #ff85a1;
+  --jade:       #06d6a0;
+  --text:       #e8eef8;
+  --text2:      #8899bb;
+  --text3:      #3d4f6e;
+  --danger:     #ff4444;
+  --warn:       #ffb700;
+  --safe:       #06d6a0;
+  --sidebar-w:  280px;
+  --sidebar-col: 72px;
+  --r:          12px;
+  --r-sm:       8px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* Custom cursor */
+body { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%23f5c842' d='M4 0 L20 12 L12 14 L8 22 Z'/%3E%3C/svg%3E") 4 0, auto; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Rajdhani', 'Noto Sans JP', sans-serif;
+  background: var(--ink);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* ─── CANVAS BG ─── */
+#bg-canvas {
+  position: fixed; inset: 0; z-index: 0;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+/* ─── INK TEXTURE OVERLAY ─── */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0;
+  background-image:
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  pointer-events: none;
+  opacity: 0.4;
+}
+
+/* ─── SPEED LINES (manga effect) ─── */
+.speed-lines {
+  position: fixed; inset: 0; z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.speed-lines::before {
+  content: '';
+  position: absolute;
+  width: 200%; height: 200%;
+  top: -50%; left: -50%;
+  background: repeating-conic-gradient(
+    from 0deg at 50% 50%,
+    transparent 0deg,
+    transparent 2.8deg,
+    rgba(245,200,66,0.012) 2.8deg,
+    rgba(245,200,66,0.012) 3deg
+  );
+  animation: spinLines 60s linear infinite;
+}
+@keyframes spinLines { to { transform: rotate(360deg); } }
+
+/* ─── APP SHELL ─── */
+.app-shell {
+  display: flex; min-height: 100vh;
+  position: relative; z-index: 1;
+}
+
+/* ═══════════════ SIDEBAR ═══════════════ */
+.sidebar {
+  width: var(--sidebar-w);
+  background: linear-gradient(175deg, #0a0e1a 0%, #0d1220 60%, #0a0c14 100%);
+  border-right: 1px solid var(--stroke2);
+  display: flex; flex-direction: column;
+  position: fixed; top: 0; left: 0; bottom: 0;
+  z-index: 200;
+  transition: width 0.4s cubic-bezier(0.77,0,0.18,1);
+  overflow: hidden;
+}
+
+/* Grimoire border effect */
+.sidebar::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg,
+    rgba(245,200,66,0.08) 0%,
+    transparent 30%,
+    transparent 70%,
+    rgba(230,57,70,0.06) 100%
+  );
+  pointer-events: none;
+}
+
+.sidebar::after {
+  content: '';
+  position: absolute;
+  right: 0; top: 0; bottom: 0; width: 1px;
+  background: linear-gradient(180deg,
+    var(--gold) 0%,
+    rgba(245,200,66,0.3) 30%,
+    rgba(0,212,255,0.2) 60%,
+    var(--crimson) 100%
+  );
+}
+
+.sidebar.collapsed { width: var(--sidebar-col); }
+
+/* Logo / Header */
+.sidebar-header {
+  padding: 20px 18px;
+  border-bottom: 1px solid var(--stroke);
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.sidebar-header::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(245,200,66,0.06), transparent);
+}
+
+.logo-wrap {
+  display: flex; align-items: center; gap: 12px;
+}
+
+.logo-emblem {
+  width: 42px; height: 42px;
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+  position: relative;
+  animation: emblemPulse 3s ease-in-out infinite;
+  box-shadow: 0 0 20px var(--gold-glow);
+}
+
+@keyframes emblemPulse {
+  0%,100% { box-shadow: 0 0 20px var(--gold-glow); }
+  50% { box-shadow: 0 0 40px var(--gold-glow), 0 0 80px rgba(245,200,66,0.15); }
+}
+
+.logo-text-wrap { overflow: hidden; white-space: nowrap; transition: opacity 0.3s; }
+.logo-main {
+  font-family: 'Bebas Neue', cursive;
+  font-size: 26px;
+  letter-spacing: 2px;
+  line-height: 1;
+  background: linear-gradient(135deg, var(--gold) 0%, #fff 50%, var(--gold2) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.logo-sub {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: var(--electric);
+  letter-spacing: 3px;
+  margin-top: 1px;
+}
+
+.sidebar.collapsed .logo-text-wrap { opacity: 0; }
+
+.sidebar-toggle {
+  position: absolute; right: 12px; top: 50%;
+  transform: translateY(-50%);
+  width: 26px; height: 26px;
+  background: rgba(245,200,66,0.1);
+  border: 1px solid rgba(245,200,66,0.3);
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--gold); font-size: 12px;
+  transition: all 0.3s;
+}
+.sidebar-toggle:hover {
+  background: rgba(245,200,66,0.2);
+  box-shadow: 0 0 12px var(--gold-glow);
+}
+
+/* Nav */
+.sidebar-nav {
+  flex: 1; padding: 12px 10px;
+  display: flex; flex-direction: column; gap: 2px;
+  overflow-y: auto; overflow-x: hidden;
+}
+
+.nav-sect {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--text3); padding: 14px 8px 4px;
+  transition: opacity 0.2s; white-space: nowrap;
+}
+.sidebar.collapsed .nav-sect { opacity: 0; }
+
+.nav-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 12px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+  color: var(--text2);
+  position: relative; overflow: hidden;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+
+.nav-item::before {
+  content: '';
+  position: absolute; left: -100%; top: 0; bottom: 0; width: 100%;
+  background: linear-gradient(90deg, transparent, rgba(245,200,66,0.06), transparent);
+  transition: left 0.4s;
+}
+
+.nav-item:hover::before { left: 100%; }
+
+.nav-item:hover {
+  background: rgba(245,200,66,0.07);
+  color: var(--text);
+  border-color: rgba(245,200,66,0.15);
+}
+
+.nav-item.active {
+  background: linear-gradient(135deg, rgba(245,200,66,0.15), rgba(230,57,70,0.08));
+  color: var(--gold);
+  border-color: rgba(245,200,66,0.35);
+  box-shadow: 0 0 20px rgba(245,200,66,0.1), inset 0 0 20px rgba(245,200,66,0.05);
+}
+
+.nav-item.active::after {
+  content: '';
+  position: absolute; left: 0; top: 20%; bottom: 20%;
+  width: 3px; background: var(--gold);
+  border-radius: 0 3px 3px 0;
+  box-shadow: 0 0 8px var(--gold-glow);
+}
+
+.nav-icon {
+  font-size: 20px; flex-shrink: 0;
+  width: 24px; text-align: center;
+  filter: drop-shadow(0 0 4px currentColor);
+}
+
+.nav-label {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 15px; font-weight: 600;
+  letter-spacing: 0.5px;
+  transition: opacity 0.2s;
+}
+.sidebar.collapsed .nav-label { opacity: 0; }
+
+.nav-badge {
+  margin-left: auto;
+  background: var(--crimson);
+  color: #fff;
+  font-size: 10px; font-weight: 700;
+  padding: 1px 6px; border-radius: 20px;
+  font-family: 'Share Tech Mono', monospace;
+  box-shadow: 0 0 8px var(--crimson-glow);
+  transition: opacity 0.2s;
+}
+.sidebar.collapsed .nav-badge { opacity: 0; }
+
+/* Power Mode Toggle */
+.power-section-sidebar {
+  padding: 14px 10px;
+  border-top: 1px solid var(--stroke);
+  flex-shrink: 0;
+}
+
+.power-toggle-btn {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px;
+  background: linear-gradient(135deg, rgba(155,93,229,0.12), rgba(0,212,255,0.06));
+  border: 1px solid rgba(155,93,229,0.3);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: all 0.3s;
+  position: relative; overflow: hidden;
+}
+
+.power-toggle-btn:hover {
+  border-color: rgba(155,93,229,0.6);
+  box-shadow: 0 0 20px rgba(155,93,229,0.2);
+}
+
+.power-glow-text {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 13px; font-weight: 700;
+  color: var(--magic2);
+  white-space: nowrap; transition: opacity 0.2s; flex: 1;
+  letter-spacing: 1px;
+}
+.sidebar.collapsed .power-glow-text { opacity: 0; width: 0; }
+
+.magic-switch { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
+.magic-switch input { opacity: 0; width: 0; height: 0; }
+.magic-slider {
+  position: absolute; inset: 0;
+  background: var(--panel3);
+  border-radius: 22px;
+  cursor: pointer;
+  transition: 0.3s;
+  border: 1px solid rgba(155,93,229,0.3);
+}
+.magic-slider::before {
+  content: '';
+  position: absolute;
+  width: 16px; height: 16px;
+  left: 2px; top: 2px;
+  background: var(--text3);
+  border-radius: 50%;
+  transition: 0.35s cubic-bezier(0.77,0,0.18,1);
+}
+input:checked + .magic-slider {
+  background: linear-gradient(135deg, var(--magic), var(--electric));
+  box-shadow: 0 0 12px var(--magic-glow);
+}
+input:checked + .magic-slider::before {
+  transform: translateX(18px);
+  background: #fff;
+  box-shadow: 0 0 8px var(--magic);
+}
+.sidebar.collapsed .magic-switch { display: none; }
+
+/* ═══════════════ MAIN ═══════════════ */
+.main-content {
+  flex: 1;
+  margin-left: var(--sidebar-w);
+  transition: margin-left 0.4s cubic-bezier(0.77,0,0.18,1);
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+}
+.sidebar.collapsed ~ .main-content { margin-left: var(--sidebar-col); }
+
+/* ─── TOPBAR ─── */
+.topbar {
+  height: 64px;
+  background: rgba(8,10,15,0.92);
+  backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--stroke);
+  display: flex; align-items: center;
+  padding: 0 28px; gap: 16px;
+  position: sticky; top: 0; z-index: 100;
+  position: relative;
+}
+
+.topbar::after {
+  content: '';
+  position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), var(--electric), var(--crimson), transparent);
+  opacity: 0.5;
+}
+
+.page-title-wrap { display: flex; flex-direction: column; }
+.page-title-jp {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px; color: var(--electric); letter-spacing: 3px; margin-bottom: 1px;
+}
+.page-title {
+  font-family: 'Bebas Neue', cursive;
+  font-size: 26px; letter-spacing: 2px;
+  background: linear-gradient(135deg, #fff, var(--gold));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  line-height: 1;
+}
+
+.topbar-right { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+
+.date-chip {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px; color: var(--text3);
+  background: var(--panel);
+  border: 1px solid var(--stroke);
+  padding: 5px 10px; border-radius: 6px;
+}
+
+/* BUTTONS */
+.btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 20px;
+  border-radius: var(--r-sm);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 14px; font-weight: 700;
+  letter-spacing: 1px; text-transform: uppercase;
+  cursor: pointer; border: none;
+  transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+  position: relative; overflow: hidden;
+}
+
+.btn::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: rgba(255,255,255,0.08);
+  transform: translateX(-100%) skewX(-15deg);
+  transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
+}
+.btn:hover::before { transform: translateX(100%) skewX(-15deg); }
+
+.btn-gold {
+  background: linear-gradient(135deg, var(--gold2), var(--gold));
+  color: var(--ink);
+  box-shadow: 0 4px 20px var(--gold-glow);
+}
+.btn-gold:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px var(--gold-glow);
+}
+.btn-gold:active { transform: translateY(0); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text2);
+  border: 1px solid var(--stroke2);
+}
+.btn-ghost:hover { color: var(--text); border-color: var(--gold); box-shadow: 0 0 12px var(--gold-glow); }
+
+.btn-crimson {
+  background: linear-gradient(135deg, var(--crimson), #b22234);
+  color: #fff;
+  box-shadow: 0 4px 16px var(--crimson-glow);
+}
+.btn-crimson:hover { transform: translateY(-2px); box-shadow: 0 8px 24px var(--crimson-glow); }
+
+.btn-electric {
+  background: linear-gradient(135deg, #0080aa, var(--electric));
+  color: var(--ink);
+  box-shadow: 0 4px 16px var(--elec-glow);
+}
+.btn-electric:hover { transform: translateY(-2px); box-shadow: 0 8px 24px var(--elec-glow); }
+
+.btn-sm { padding: 6px 14px; font-size: 12px; }
+.btn-xs { padding: 4px 10px; font-size: 11px; }
+
+.icon-btn {
+  width: 30px; height: 30px; padding: 0;
+  border-radius: 6px; border: 1px solid var(--stroke);
+  background: transparent; color: var(--text3);
+  cursor: pointer; font-size: 13px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.icon-btn:hover { border-color: var(--gold); color: var(--gold); box-shadow: 0 0 8px var(--gold-glow); }
+.icon-btn.del:hover { border-color: var(--crimson); color: var(--crimson); box-shadow: 0 0 8px var(--crimson-glow); }
+
+/* ═══════════════ PAGE VIEWS ═══════════════ */
+.page-view {
+  display: none; flex-direction: column; gap: 20px;
+  padding: 28px; flex: 1;
+}
+.page-view.active {
+  display: flex;
+  animation: pageAnime 0.5s cubic-bezier(0.4,0,0.2,1);
+}
+
+@keyframes pageAnime {
+  from { opacity: 0; transform: translateY(24px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ═══════════════ MANGA PANEL CARDS ═══════════════ */
+.panel-card {
+  background: var(--panel);
+  border: 1px solid var(--stroke);
+  border-radius: var(--r);
+  padding: 22px;
+  position: relative; overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+
+.panel-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  opacity: 0.6;
+}
+
+.panel-card::after {
+  content: '';
+  position: absolute; bottom: 0; right: 0;
+  width: 60px; height: 60px;
+  background: radial-gradient(circle at bottom right, rgba(245,200,66,0.06), transparent);
+}
+
+.panel-card:hover { border-color: rgba(245,200,66,0.25); }
+.panel-card.electric-card::before { background: linear-gradient(90deg, transparent, var(--electric), transparent); }
+.panel-card.crimson-card::before { background: linear-gradient(90deg, transparent, var(--crimson), transparent); }
+.panel-card.magic-card::before { background: linear-gradient(90deg, transparent, var(--magic), transparent); }
+
+.card-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.card-title {
+  font-family: 'Bebas Neue', cursive;
+  font-size: 20px; letter-spacing: 2px;
+  display: flex; align-items: center; gap: 8px;
+}
+
+.card-title-jp {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px; color: var(--text3); letter-spacing: 2px;
+  text-transform: uppercase; margin-top: 2px;
+}
+
+/* ═══════════════ DASHBOARD STATS ═══════════════ */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+.stat-card {
+  background: var(--panel);
+  border: 1px solid var(--stroke);
+  border-radius: var(--r);
+  padding: 18px 20px;
+  position: relative; overflow: hidden;
+  cursor: pointer;
+  transition: all 0.35s cubic-bezier(0.4,0,0.2,1);
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, currentColor, transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.stat-card:hover {
+  transform: translateY(-4px) skewY(-0.5deg);
+  border-color: var(--stroke2);
+}
+.stat-card:hover::before { opacity: 0.04; }
+
+.stat-card .corner-accent {
+  position: absolute; top: 0; right: 0;
+  width: 40px; height: 40px;
+  clip-path: polygon(100% 0, 0 0, 100% 100%);
+}
+
+.stat-card .side-bar {
+  position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  border-radius: 0 3px 3px 0;
+}
+
+.stat-value {
+  font-family: 'Bebas Neue', cursive;
+  font-size: 38px; letter-spacing: -1px; line-height: 1;
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px; color: var(--text3);
+  letter-spacing: 1.5px; text-transform: uppercase;
+}
+
+.stat-sub {
+  font-size: 12px; color: var(--text3);
+  margin-top: 6px; display: flex; align-items: center; gap: 4px;
+}
+.stat-sub.up { color: var(--jade); }
+.stat-sub.dn { color: var(--crimson2); }
+
+/* ═══════════════ CHARTS AREA ═══════════════ */
+.charts-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 14px;
+}
+
+.chart-wrap {
+  position: relative;
+  height: 220px;
+}
+
+/* ═══════════════ TASKS ═══════════════ */
+.task-add-bar {
+  display: flex; gap: 10px; align-items: center;
+  flex-wrap: wrap;
+}
+
+.input-field {
+  flex: 1;
+  background: var(--ink2);
+  border: 1px solid var(--stroke);
+  border-radius: var(--r-sm);
+  padding: 10px 14px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 15px; font-weight: 500;
+  color: var(--text);
+  outline: none;
+  transition: all 0.25s;
+  min-width: 0;
+}
+.input-field::placeholder { color: var(--text3); }
+.input-field:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(245,200,66,0.12), 0 0 20px rgba(245,200,66,0.1);
+  background: var(--ink3);
+}
+
+.select-field {
+  background: var(--ink2);
+  border: 1px solid var(--stroke);
+  border-radius: var(--r-sm);
+  padding: 10px 12px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 14px; font-weight: 500;
+  color: var(--text2); outline: none; cursor: pointer;
+  transition: all 0.25s;
+  appearance: none;
+}
+.select-field:focus { border-color: var(--gold); }
+
+/* Priority selector */
+.prio-selector {
+  display: flex; gap: 6px; align-items: center;
+}
+.prio-btn {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.25s;
+  position: relative;
+}
+.prio-btn::after {
+  content: '';
+  position: absolute; inset: -4px;
+  border-radius: 50%; border: 2px solid transparent;
+  transition: border-color 0.25s;
+}
+.prio-btn.active::after { border-color: currentColor; }
+.prio-btn.prio-high { background: var(--crimson); color: var(--crimson); box-shadow: 0 0 8px var(--crimson-glow); }
+.prio-btn.prio-med  { background: var(--warn); color: var(--warn); box-shadow: 0 0 8px rgba(255,183,0,0.3); }
+.prio-btn.prio-low  { background: var(--jade); color: var(--jade); box-shadow: 0 0 8px rgba(6,214,160,0.3); }
+
+/* Filters */
+.filter-bar {
+  display: flex; gap: 4px;
+  background: var(--ink2);
+  border: 1px solid var(--stroke);
+  border-radius: var(--r-sm);
+  padding: 4px;
+  width: fit-content;
+}
+
+.filter-tab {
+  padding: 6px 18px;
+  border-radius: 6px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 13px; font-weight: 600; letter-spacing: 0.5px;
+  cursor: pointer; color: var(--text3);
+  transition: all 0.25s; border: none; background: transparent;
+  text-transform: uppercase;
+}
+.filter-tab.active {
+  background: var(--panel2);
+  color: var(--gold);
+  box-shadow: 0 0 12px rgba(245,200,66,0.15);
+}
+
+/* Task list */
+.task-list { display: flex; flex-direction: column; gap: 8px; min-height: 80px; }
+
+.task-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 16px;
+  background: var(--ink2);
+  border: 1px solid var(--stroke);
+  border-radius: var(--r-sm);
+  position: relative; overflow: hidden;
+  transition: all 0.35s cubic-bezier(0.4,0,0.2,1);
+  animation: taskSlideIn 0.35s cubic-bezier(0.4,0,0.2,1);
+}
+
+@keyframes taskSlideIn {
+  from { opacity: 0; transform: translateX(-24px) skewX(-2deg); }
+  to   { opacity: 1; transform: translateX(0) skewX(0); }
+}
+
+.task-item::before {
+  content: '';
+  position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+}
+.task-item.ph::before  { background: var(--crimson); box-shadow: 0 0 6px var(--crimson-glow); }
+.task-item.pm::before  { background: var(--warn); box-shadow: 0 0 6px rgba(255,183,0,0.4); }
+.task-item.pl::before  { background: var(--jade); box-shadow: 0 0 6px rgba(6,214,160,0.4); }
+
+.task-item:hover {
+  border-color: rgba(245,200,66,0.2);
+  background: var(--ink3);
+  transform: translateX(3px);
+}
+
+.task-item.removing {
+  animation: taskOut 0.35s cubic-bezier(0.4,0,0.2,1) forwards;
+}
+@keyframes taskOut {
+  to { opacity: 0; transform: translateX(40px) scale(0.95); height: 0; padding: 0; border: none; margin: 0; }
+}
+
+.task-item.completing {
+  animation: taskDone 0.5s cubic-bezier(0.4,0,0.2,1) forwards;
+}
+@keyframes taskDone {
+  0% { opacity: 1; }
+  40% { transform: scale(1.02); background: rgba(6,214,160,0.08); border-color: var(--jade); }
+  100% { opacity: 0; transform: scale(0.95) translateX(30px); height: 0; padding: 0; margin: 0; }
+}
+
+/* Checkbox */
+.task-chk {
+  width: 22px; height: 22px;
+  border-radius: 6px;
+  border: 2px solid var(--stroke2);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700;
+  flex-shrink: 0;
+  transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+  position: relative;
+}
+.task-chk:hover { border-color: var(--gold); box-shadow: 0 0 8px var(--gold-glow); }
+.task-chk.done {
+  background: var(--jade); border-color: var(--jade);
+  color: var(--ink); box-shadow: 0 0 12px rgba(6,214,160,0.4);
+}
+
+.task-text {
+  flex: 1; font-size: 15px; font-weight: 500;
+  transition: all 0.3s;
+}
+.task-text.done {
+  text-decoration: line-through;
+  color: var(--text3);
+}
+
+.task-goal-tag {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px; padding: 2px 8px;
+  background: rgba(0,212,255,0.1);
+  border: 1px solid rgba(0,212,255,0.2);
+  border-radius: 20px; color: var(--electric);
+  letter-spacing: 0.5px;
+}
+
+.task-actions {
+  display: flex; gap: 4px;
+  opacity: 0; transition: opacity 0.2s;
+}
+.task-item:hover .task-actions { opacity: 1; }
+
+/* ═══════════════ GOALS ═══════════════ */
+.goals-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+.goal-card {
+  background: var(--panel);
+  border: 1px solid var(--stroke);
+  border-radius: var(--r);
+  padding: 20px;
+  position: relative; overflow: hidden;
+  cursor: pointer;
+  transition: all 0.35s cubic-bezier(0.4,0,0.2,1);
+  animation: taskSlideIn 0.35s cubic-bezier(0.4,0,0.2,1);
+}
+
+.goal-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+}
+.goal-card.short::before { background: linear-gradient(90deg, transparent, var(--electric), transparent); }
+.goal-card.long::before  { background: linear-gradient(90deg, transparent, var(--magic2), transparent); }
+
+.goal-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(245,200,66,0.3);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+}
+
+.goal-card.removing {
+  animation: taskOut 0.35s cubic-bezier(0.4,0,0.2,1) forwards;
+}
+
+.goal-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 3px 10px; border-radius: 20px; margin-bottom: 12px;
+}
+.badge-short { background: rgba(0,212,255,0.12); color: var(--electric); border: 1px solid rgba(0,212,255,0.25); }
+.badge-long  { background: rgba(155,93,229,0.12); color: var(--magic2);   border: 1px solid rgba(155,93,229,0.25); }
+
+.goal-title {
+  font-family: 'Bebas Neue', cursive;
+  font-size: 20px; letter-spacing: 1px;
+  margin-bottom: 12px; line-height: 1.2;
+}
+
+/* Progress bar */
+.prog-wrap {
+  height: 6px; background: var(--ink2);
+  border-radius: 6px; overflow: hidden; margin-bottom: 6px;
+}
+.prog-fill {
+  height: 100%; border-radius: 6px;
+  background: linear-gradient(90deg, var(--electric), var(--magic2));
+  transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+  position: relative; overflow: hidden;
+}
+.prog-fill::after {
+  content: '';
+  position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  animation: shimmer 2.5s infinite;
+}
+@keyframes shimmer { to { left: 100%; } }
+
+.prog-labels {
+  display: flex; justify-content: space-between;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px; color: var(--text3); margin-bottom: 14px;
+}
+
+.goal-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-top: 12px; border-top: 1px solid var(--stroke);
+}
+
+/* Savings ring */
+.sav-ring { position: relative; width: 52px; height: 52px; flex-shrink: 0; }
+.sav-ring svg { transform: rotate(-90deg); }
+.sav-ring-txt {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px; font-weight: 700;
+}
+
+/* ═══════════════ MONEY TRACKER ═══════════════ */
+.money-totals {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+}
+
+.money-card {
+  background: var(--ink2);
+  border: 1px solid var(--stroke);
+  border-radius: var(--r);
+  padding: 16px 20px;
+  text-align: center;
+  transition: all 0.3s;
+  position: relative; overflow: hidden;
+}
+.money-card:hover { border-color: var(--stroke2); transform: translateY(-2px); }
+
+.money-card::before {
+  content: '';
+  position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+}
+.money-card.inc::before { background: var(--jade); }
+.money-card.exp::before { background: var(--crimson); }
+.money-card.bal::before { background: var(--electric); }
+
+.money-val {
+  font-family: 'Bebas Neue', cursive;
+  font-size: 30px; letter-spacing: 1px; line-height: 1;
+  margin-bottom: 4px;
+}
+.money-val.inc { color: var(--jade); text-shadow: 0 0 20px rgba(6,214,160,0.4); }
+.money-val.exp { color: var(--crimson2); text-shadow: 0 0 20px var(--crimson-glow); }
+.money-val.bal-pos { color: var(--electric); text-shadow: 0 0 20px var(--elec-glow); }
+.money-val.bal-neg { color: var(--crimson2); }
+.money-lbl {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px; color: var(--text3);
+  letter-spacing: 1.5px; text-transform: uppercase;
+}
+
+/* Entry form */
+.entry-form {
+  display: grid;
+  grid-template-columns: 1fr 140px 140px auto auto;
+  gap: 10px; align-items: center;
+}
+
+.type-toggle {
+  display: flex; gap: 2px;
+  background: var(--ink2);
+  border: 1px solid var(--stroke);
+  border-radius: var(--r-sm);
+  padding: 3px;
+}
+.type-btn {
+  padding: 7px 14px;
+  border-radius: 6px; border: none; background: transparent;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+  cursor: pointer; color: var(--text3); transition: all 0.25s;
+}
+.type-btn.t-inc { background: rgba(6,214,160,0.15); color: var(--jade); }
+.type-btn.t-exp { background: rgba(230,57,70,0.15); color: var(--crimson2); }
+
+.money-layout { display: grid; grid-template-columns: 1fr 300px; gap: 16px; }
+
+/* Entry items */
+.entry-list { display: flex; flex-direction: column; gap: 8px; max-height: 360px; overflow-y: auto; }
+
+.entry-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 14px;
+  background: var(--ink2); border: 1px solid var(--stroke);
+  border-radius: var(--r-sm);
+  animation: taskSlideIn 0.3s cubic-bezier(0.4,0,0.2,1);
+  transition: all 0.3s;
+}
+.entry-item:hover { border-color: var(--stroke2); }
+.entry-item.removing { animation: taskOut 0.3s forwards; }
+
+.entry-ico {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; flex-shrink: 0;
+}
+.entry-ico.i { background: rgba(6,214,160,0.12); }
+.entry-ico.e { background: rgba(230,57,70,0.1); }
+
+.entry-info { flex: 1; }
+.entry-desc { font-size: 14px; font-weight: 600; }
+.entry-cat  { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--text3); margin-top: 1px; }
+
+.entry-amt {
+  font-family: 'Bebas Neue', cursive;
+  font-size: 18px; letter-spacing: 0.5px;
+}
+.entry-amt.i { color: var(--jade); }
+.entry-amt.e { color: var(--crimson2); }
+
+/* ═══════════════ EMAIL SUMMARY ═══════════════ */
+.email-box {
+  background: var(--ink2);
+  border: 1px solid var(--stroke);
+  border-radius: var(--r);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px; line-height: 2;
+  padding: 24px; color: var(--text2);
+  white-space: pre-wrap;
+  max-height: 520px; overflow-y: auto;
+  position: relative;
+}
+
+/* ═══════════════ REFLECTION ═══════════════ */
+.reflect-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+.stat-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 0; border-bottom: 1px solid var(--stroke);
+}
+.stat-row:last-child { border: none; }
+.stat-row-lbl { font-size: 13px; font-weight: 500; color: var(--text2); }
+.stat-row-val {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 13px;
+}
+
+/* AI box */
+.ai-box {
+  background: linear-gradient(135deg, rgba(155,93,229,0.08), rgba(0,212,255,0.05));
+  border: 1px solid rgba(155,93,229,0.25);
+  border-radius: var(--r);
+  padding: 22px;
+  position: relative; overflow: hidden;
+}
+.ai-box::before {
+  content: '';
+  position: absolute; top: -40px; right: -40px;
+  width: 120px; height: 120px;
+  background: radial-gradient(circle, rgba(155,93,229,0.15), transparent);
+}
+
+.ai-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--magic2);
+  background: rgba(155,93,229,0.12);
+  border: 1px solid rgba(155,93,229,0.3);
+  padding: 4px 12px; border-radius: 20px;
+  margin-bottom: 12px;
+}
+
+.ai-dots { display: flex; gap: 5px; padding: 8px 0; }
+.ai-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--magic2);
+  animation: aiPulse 1.2s ease-in-out infinite;
+}
+.ai-dot:nth-child(2) { animation-delay: 0.2s; background: var(--electric); }
+.ai-dot:nth-child(3) { animation-delay: 0.4s; background: var(--gold); }
+@keyframes aiPulse {
+  0%,80%,100% { transform: scale(0.5); opacity: 0.3; }
+  40% { transform: scale(1.2); opacity: 1; }
+}
+
+.ai-text { font-size: 14px; color: var(--text2); line-height: 1.8; }
+
+/* ═══════════════ BUDGET ═══════════════ */
+.budget-ring-wrap { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+
+.budget-ring { position: relative; width: 170px; height: 170px; }
+.budget-ring svg { transform: rotate(-90deg); }
+.budget-ring-inner {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+}
+.budget-pct {
+  font-family: 'Bebas Neue', cursive;
+  font-size: 42px; line-height: 1;
+}
+.budget-lbl {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px; color: var(--text3); letter-spacing: 2px; text-transform: uppercase;
+}
+
+.alert-banner {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 16px; border-radius: var(--r-sm);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 14px; font-weight: 700; letter-spacing: 0.5px;
+  animation: alertPop 0.4s cubic-bezier(0.4,0,0.2,1);
+}
+@keyframes alertPop { from { opacity: 0; transform: scale(0.9); } }
+
+.alert-safe { background: rgba(6,214,160,0.1); color: var(--jade); border: 1px solid rgba(6,214,160,0.25); }
+.alert-warn { background: rgba(255,183,0,0.1); color: var(--warn); border: 1px solid rgba(255,183,0,0.25); }
+.alert-dang { background: rgba(230,57,70,0.12); color: var(--crimson2); border: 1px solid rgba(230,57,70,0.3); }
+.alert-crit {
+  background: rgba(230,57,70,0.18); color: var(--crimson2);
+  border: 1px solid var(--crimson);
+  animation: alertPop 0.4s, shake 0.5s;
+}
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  20%,60%  { transform: translateX(-5px); }
+  40%,80%  { transform: translateX(5px); }
+}
+
+/* ═══════════════ MODAL ═══════════════ */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.8);
+  backdrop-filter: blur(12px);
+  z-index: 2000;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  opacity: 0; visibility: hidden;
+  transition: all 0.3s;
+}
+.modal-overlay.open { opacity: 1; visibility: visible; }
+
+.modal {
+  background: var(--ink2);
+  border: 1px solid var(--stroke2);
+  border-radius: var(--r);
+  padding: 28px;
+  width: 100%; max-width: 500px; max-height: 85vh;
+  overflow-y: auto;
+  transform: scale(0.88) translateY(30px);
+  transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
+  position: relative;
+}
+.modal::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--gold), var(--electric), var(--magic2));
+}
+.modal-overlay.open .modal { transform: scale(1) translateY(0); }
+
+.modal-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 22px;
+}
+.modal-title {
+  font-family: 'Bebas Neue', cursive;
+  font-size: 22px; letter-spacing: 2px;
+}
+.modal-close {
+  width: 32px; height: 32px; border-radius: 8px;
+  border: 1px solid var(--stroke); background: var(--panel);
+  color: var(--text2); cursor: pointer; font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.modal-close:hover { border-color: var(--crimson); color: var(--crimson); box-shadow: 0 0 8px var(--crimson-glow); }
+
+.form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.form-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px; color: var(--text3);
+  letter-spacing: 1.5px; text-transform: uppercase;
+}
+
+/* ═══════════════ TOAST ═══════════════ */
+.toast-wrap {
+  position: fixed; bottom: 24px; right: 24px;
+  z-index: 3000;
+  display: flex; flex-direction: column; gap: 8px;
+  pointer-events: none;
+}
+
+.toast {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px;
+  background: var(--panel2);
+  border: 1px solid var(--stroke2);
+  border-radius: var(--r-sm);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 14px; font-weight: 600;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  animation: toastIn 0.4s cubic-bezier(0.4,0,0.2,1);
+  pointer-events: auto; max-width: 320px;
+  position: relative; overflow: hidden;
+}
+.toast::before {
+  content: '';
+  position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+}
+.toast.s::before { background: var(--jade); }
+.toast.e::before { background: var(--crimson); }
+.toast.i::before { background: var(--electric); }
+.toast.w::before { background: var(--warn); }
+
+.toast.out { animation: toastOut 0.3s cubic-bezier(0.4,0,0.2,1) forwards; }
+
+@keyframes toastIn  { from { opacity: 0; transform: translateX(50px) scale(0.9); } }
+@keyframes toastOut { to   { opacity: 0; transform: translateX(50px) scale(0.9); } }
+
+/* ═══════════════ EMPTY STATES ═══════════════ */
+.empty-state {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 48px 24px; gap: 12px; text-align: center;
+}
+.empty-ico { font-size: 44px; opacity: 0.3; filter: grayscale(0.5); }
+.empty-ttl {
+  font-family: 'Bebas Neue', cursive;
+  font-size: 20px; letter-spacing: 2px; color: var(--text3);
+}
+.empty-sub { font-size: 13px; color: var(--text3); }
+
+/* ═══════════════ SCROLLBAR ═══════════════ */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--ink); }
+::-webkit-scrollbar-thumb { background: var(--panel3); border-radius: 5px; }
+::-webkit-scrollbar-thumb:hover { background: var(--gold2); }
+
+/* ═══════════════ GRID HELPERS ═══════════════ */
+.g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+/* ═══════════════ POWER BADGE ═══════════════ */
+.power-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--magic2);
+  background: rgba(155,93,229,0.1);
+  border: 1px solid rgba(155,93,229,0.25);
+  padding: 3px 10px; border-radius: 20px;
+  animation: powerPulse 2s ease-in-out infinite;
+}
+@keyframes powerPulse {
+  0%,100% { box-shadow: 0 0 0 rgba(155,93,229,0.3); }
+  50%      { box-shadow: 0 0 14px rgba(155,93,229,0.4); }
+}
+
+/* ═══════════════ SPARKLINES ═══════════════ */
+.spark-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.spark-card {
+  background: var(--ink2); border: 1px solid var(--stroke);
+  border-radius: var(--r-sm); padding: 14px;
+  transition: all 0.3s;
+}
+.spark-card:hover { border-color: var(--stroke2); }
+.spark-title {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px; color: var(--text3); letter-spacing: 1.5px;
+  text-transform: uppercase; margin-bottom: 4px;
+}
+.spark-val {
+  font-family: 'Bebas Neue', cursive;
+  font-size: 22px; letter-spacing: 1px; margin-bottom: 8px;
+}
+
+/* Ripple */
+.ripple {
+  position: absolute; border-radius: 50%;
+  background: rgba(245,200,66,0.2);
+  transform: scale(0);
+  animation: rippleAnim 0.7s linear;
+  pointer-events: none;
+}
+@keyframes rippleAnim { to { transform: scale(5); opacity: 0; } }
+
+/* MANGA PANEL decorative dividers */
+.manga-divider {
+  display: flex; align-items: center; gap: 12px;
+  margin: 4px 0;
+}
+.manga-divider span {
+  font-family: 'Bebas Neue', cursive;
+  font-size: 12px; letter-spacing: 3px;
+  color: var(--text3);
+}
+.manga-divider::before, .manga-divider::after {
+  content: ''; flex: 1; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--stroke2), transparent);
+}
+
+/* Power sections */
+.power-only { display: none; }
+.power-active .power-only { display: flex; flex-direction: column; }
+.power-active .power-only.grid { display: grid; }
+.power-active .power-only.block { display: block; }
+
+/* Task count ring */
+.count-ring {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--crimson);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px; font-weight: 700;
+  box-shadow: 0 0 10px var(--crimson-glow);
+  animation: countPulse 2s ease-in-out infinite;
+}
+@keyframes countPulse {
+  50% { box-shadow: 0 0 18px var(--crimson-glow); }
+}
+
+/* Kanji decorative elements */
+.kanji-bg {
+  position: absolute;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-weight: 900;
+  font-size: 120px;
+  color: rgba(245,200,66,0.02);
+  pointer-events: none;
+  line-height: 1;
+  user-select: none;
+}
+
+/* Category bar in budget */
+.cat-bar-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 0; border-bottom: 1px solid var(--stroke);
+}
+.cat-bar-row:last-child { border: none; }
+.cat-bar-lbl { font-size: 13px; font-weight: 500; flex: 1; display: flex; align-items: center; gap: 6px; }
+.cat-bar-wrap { width: 90px; height: 4px; background: var(--ink2); border-radius: 4px; overflow: hidden; }
+.cat-bar-fill { height: 100%; background: linear-gradient(90deg, var(--electric), var(--magic2)); transition: width 0.6s; }
+.cat-bar-val {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px; color: var(--text2); min-width: 55px; text-align: right;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .charts-grid { grid-template-columns: 1fr; }
+  .goals-grid { grid-template-columns: 1fr; }
+  .money-layout { grid-template-columns: 1fr; }
+  .spark-grid { grid-template-columns: repeat(2, 1fr); }
+  .entry-form { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 800px) {
+  .sidebar { width: var(--sidebar-col); }
+  .sidebar .logo-text-wrap, .sidebar .nav-label, .sidebar .power-glow-text { opacity: 0; width: 0; }
+  .main-content { margin-left: var(--sidebar-col) !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- BG Canvas -->
+<canvas id="bg-canvas"></canvas>
+<!-- Speed lines -->
+<div class="speed-lines"></div>
+<!-- Toast -->
+<div class="toast-wrap" id="toasts"></div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal" id="modal-box">
+    <div class="modal-head">
+      <h3 class="modal-title" id="modal-title">—</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<div class="app-shell">
+
+<!-- ══════════════════════ SIDEBAR ══════════════════════ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo-wrap">
+      <div class="logo-emblem">⚔</div>
+      <div class="logo-text-wrap">
+        <div class="logo-main">FlowLife</div>
+        <div class="logo-sub">覚醒 AWAKENING</div>
+      </div>
+    </div>
+    <button class="sidebar-toggle" id="sb-toggle" onclick="toggleSidebar()">◀</button>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-sect">OVERVIEW</div>
+    <div class="nav-item active" onclick="gotoPage('dashboard',this)">
+      <span class="nav-icon">⬡</span>
+      <span class="nav-label">Command Board</span>
+    </div>
+
+    <div class="nav-sect">MISSION</div>
+    <div class="nav-item" onclick="gotoPage('tasks',this)">
+      <span class="nav-icon">⚔</span>
+      <span class="nav-label">Battle Tasks</span>
+      <span class="nav-badge" id="task-badge" style="display:none">0</span>
+    </div>
+    <div class="nav-item" onclick="gotoPage('goals',this)">
+      <span class="nav-icon">◎</span>
+      <span class="nav-label">Grimoire Goals</span>
+    </div>
+
+    <div class="nav-sect">TREASURY</div>
+    <div class="nav-item" onclick="gotoPage('money',this)">
+      <span class="nav-icon">💰</span>
+      <span class="nav-label">Gold Ledger</span>
+    </div>
+
+    <div class="nav-sect">REPORTS</div>
+    <div class="nav-item" onclick="gotoPage('email',this)">
+      <span class="nav-icon">📜</span>
+      <span class="nav-label">Daily Scroll</span>
+    </div>
+
+    <div id="power-nav" style="display:none">
+      <div class="nav-sect">
+        <span style="color:var(--magic2)">⚡ POWER MODE</span>
+      </div>
+      <div class="nav-item" onclick="gotoPage('reflect',this)">
+        <span class="nav-icon">🔮</span>
+        <span class="nav-label">Arc Analysis</span>
+      </div>
+      <div class="nav-item" onclick="gotoPage('budget',this)">
+        <span class="nav-icon">🛡</span>
+        <span class="nav-label">Budget Shield</span>
+      </div>
+    </div>
+  </nav>
+
+  <div class="power-section-sidebar">
+    <label class="power-toggle-btn">
+      <span style="font-size:18px">⚡</span>
+      <span class="power-glow-text">POWER MODE</span>
+      <div class="magic-switch">
+        <input type="checkbox" id="power-cb" onchange="togglePower(this)">
+        <span class="magic-slider"></span>
+      </div>
+    </label>
+  </div>
+</aside>
+
+<!-- ══════════════════════ MAIN ══════════════════════ -->
+<div class="main-content" id="main">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="page-title-wrap">
+      <div class="page-title-jp" id="pg-jp">COMMAND CENTER</div>
+      <div class="page-title" id="pg-title">Dashboard</div>
+    </div>
+    <div class="topbar-right">
+      <div class="date-chip" id="date-chip"></div>
+      <button class="btn btn-gold btn-sm" id="add-btn" onclick="topAdd()">
+        <span>+</span><span id="add-lbl">ADD TASK</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ═══════ DASHBOARD ═══════ -->
+  <div class="page-view active" id="pg-dashboard">
+    <div class="kanji-bg" style="top:-10px;right:40px;opacity:0.015">武</div>
+
+    <div class="stats-row" id="dash-stats"></div>
+
+    <div class="charts-grid">
+      <div class="panel-card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">⚔ INCOME vs EXPENSE</div>
+            <div class="card-title-jp">LAST 7 DAYS — FINANCIAL BATTLE</div>
+          </div>
+          <span style="font-size:11px;color:var(--text3);font-family:'Share Tech Mono',monospace">7D VIEW</span>
+        </div>
+        <div class="chart-wrap"><canvas id="bar-chart"></canvas></div>
+      </div>
+      <div class="panel-card electric-card">
+        <div class="card-head">
+          <div class="card-title">💎 SPENDING MAP</div>
+        </div>
+        <div class="chart-wrap"><canvas id="donut-dash"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Power sparklines -->
+    <div class="panel-card magic-card power-only block" id="spark-section" style="display:none">
+      <div class="card-head">
+        <div class="card-title">⚡ POWER INSIGHTS</div>
+        <div class="power-badge">⚡ POWER MODE</div>
+      </div>
+      <div class="spark-grid" id="spark-grid"></div>
+    </div>
+  </div>
+
+  <!-- ═══════ TASKS ═══════ -->
+  <div class="page-view" id="pg-tasks">
+    <div class="kanji-bg" style="bottom:20px;right:60px">戦</div>
+
+    <div class="panel-card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">⚔ NEW BATTLE TASK</div>
+          <div class="card-title-jp">CREATE YOUR NEXT QUEST</div>
+        </div>
+        <div class="prio-selector" id="prio-sel">
+          <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:1px">RANK:</span>
+          <div class="prio-btn prio-high active" data-p="high" onclick="setPrio('high')"></div>
+          <div class="prio-btn prio-med"         data-p="med"  onclick="setPrio('med')"></div>
+          <div class="prio-btn prio-low"         data-p="low"  onclick="setPrio('low')"></div>
+        </div>
+      </div>
+      <div class="task-add-bar">
+        <input class="input-field" id="task-in" placeholder="Name your quest..." onkeydown="if(event.key==='Enter')addTask()">
+        <select class="select-field" id="task-goal-sel">
+          <option value="">No Goal</option>
+        </select>
+        <button class="btn btn-gold" onclick="addTask()">DEPLOY ↵</button>
+      </div>
+    </div>
+
+    <div class="panel-card">
+      <div class="card-head">
+        <div class="filter-bar">
+          <button class="filter-tab active" onclick="filterTasks('all',this)">All</button>
+          <button class="filter-tab" onclick="filterTasks('active',this)">Active</button>
+          <button class="filter-tab" onclick="filterTasks('done',this)">Completed</button>
+        </div>
+        <div id="task-count" style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text3)"></div>
+      </div>
+      <div class="task-list" id="task-list"></div>
+    </div>
+  </div>
+
+  <!-- ═══════ GOALS ═══════ -->
+  <div class="page-view" id="pg-goals">
+    <div class="kanji-bg" style="top:0;left:20px">夢</div>
+    <div class="panel-card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">◎ GRIMOIRE GOALS</div>
+          <div class="card-title-jp">YOUR DESTINY AWAITS</div>
+        </div>
+        <button class="btn btn-gold btn-sm" onclick="openGoalModal()">+ NEW GRIMOIRE</button>
+      </div>
+      <div class="goals-grid" id="goals-grid">
+        <div class="empty-state" style="grid-column:1/-1">
+          <div class="empty-ico">📖</div>
+          <div class="empty-ttl">NO GRIMOIRES YET</div>
+          <div class="empty-sub">Forge your first goal to begin your legend</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════ MONEY ═══════ -->
+  <div class="page-view" id="pg-money">
+    <div class="kanji-bg" style="bottom:0;right:40px">金</div>
+
+    <div class="panel-card">
+      <div class="money-totals" id="money-totals"></div>
+      <div style="height:12px"></div>
+      <div class="entry-form">
+        <input class="input-field" id="en-desc" placeholder="Transaction description..." onkeydown="if(event.key==='Enter')addEntry()">
+        <input class="input-field" id="en-amt" type="number" placeholder="₹ Amount" onkeydown="if(event.key==='Enter')addEntry()">
+        <select class="select-field" id="en-cat">
+          <option>Food</option><option>Transport</option><option>Shopping</option>
+          <option>Bills</option><option>Health</option><option>Entertainment</option>
+          <option>Salary</option><option>Freelance</option><option>Investment</option><option>Other</option>
+        </select>
+        <div class="type-toggle">
+          <button class="type-btn t-inc" id="tb-inc" onclick="setType('income')">+ IN</button>
+          <button class="type-btn"       id="tb-exp" onclick="setType('expense')">− OUT</button>
+        </div>
+        <button class="btn btn-gold" onclick="addEntry()">LOG</button>
+      </div>
+    </div>
+
+    <div class="money-layout">
+      <div class="panel-card electric-card">
+        <div class="card-head">
+          <div class="card-title">📋 LEDGER</div>
+        </div>
+        <div class="entry-list" id="entry-list"></div>
+      </div>
+      <div class="panel-card crimson-card">
+        <div class="card-head">
+          <div class="card-title">📊 BREAKDOWN</div>
+        </div>
+        <div class="chart-wrap" style="height:260px"><canvas id="donut-money"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════ EMAIL / SCROLL ═══════ -->
+  <div class="page-view" id="pg-email">
+    <div class="panel-card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">📜 DAILY SCROLL</div>
+          <div class="card-title-jp">YOUR MISSION BRIEFING</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost btn-sm" onclick="genEmail()">🔄 REFRESH</button>
+          <button class="btn btn-gold btn-sm" onclick="copyEmail()">📋 COPY</button>
+        </div>
+      </div>
+      <div class="email-box" id="email-box">Generating your scroll...</div>
+    </div>
+  </div>
+
+  <!-- ═══════ REFLECTION (POWER) ═══════ -->
+  <div class="page-view" id="pg-reflect">
+    <div class="g2">
+      <div class="panel-card">
+        <div class="card-title" style="margin-bottom:18px">⚔ 7-DAY BATTLE STATS</div>
+        <div id="ref-task-stats"></div>
+      </div>
+      <div class="panel-card crimson-card">
+        <div class="card-title" style="margin-bottom:18px">💸 7-DAY GOLD FLOW</div>
+        <div id="ref-gold-stats"></div>
+      </div>
+    </div>
+    <div class="panel-card magic-card">
+      <div class="card-head">
+        <div class="card-title">📈 ARC TREND</div>
+      </div>
+      <div class="chart-wrap"><canvas id="trend-chart"></canvas></div>
+    </div>
+    <div class="ai-box" id="ai-box">
+      <div class="ai-badge">🤖 ORACLE ANALYSIS</div>
+      <div class="ai-dots"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div></div>
+    </div>
+  </div>
+
+  <!-- ═══════ BUDGET (POWER) ═══════ -->
+  <div class="page-view" id="pg-budget">
+    <div class="g2">
+      <div class="panel-card magic-card" style="display:flex;flex-direction:column;align-items:center;gap:20px">
+        <div class="card-title">🛡 BUDGET SHIELD</div>
+        <div class="budget-ring-wrap">
+          <div class="budget-ring">
+            <svg viewBox="0 0 170 170" width="170" height="170">
+              <circle cx="85" cy="85" r="72" fill="none" stroke="var(--panel3)" stroke-width="14"/>
+              <circle id="budget-arc" cx="85" cy="85" r="72" fill="none"
+                stroke="var(--jade)" stroke-width="14" stroke-linecap="round"
+                stroke-dasharray="452" stroke-dashoffset="452"
+                style="transition:stroke-dashoffset 1s cubic-bezier(0.4,0,0.2,1),stroke 0.5s ease"/>
+            </svg>
+            <div class="budget-ring-inner">
+              <div class="budget-pct" id="bpct">0%</div>
+              <div class="budget-lbl">OF LIMIT</div>
+            </div>
+          </div>
+          <div id="budget-alert" class="alert-banner alert-safe">🛡 Shield at full power</div>
+        </div>
+        <div style="width:100%">
+          <div class="form-group">
+            <label class="form-label">Weekly Limit (₹)</label>
+            <input class="input-field" id="blimit" type="number" placeholder="e.g. 5000">
+          </div>
+          <button class="btn btn-electric" style="width:100%" onclick="saveLimit()">SET SHIELD LIMIT</button>
+        </div>
+      </div>
+
+      <div class="panel-card">
+        <div class="card-title" style="margin-bottom:18px">📊 CATEGORY BREAKDOWN</div>
+        <div id="bcat-list"></div>
+        <div style="margin-top:20px">
+          <div class="manga-divider"><span>GOAL × GOLD LINK</span></div>
+          <div id="goal-gold-link" style="margin-top:12px"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main-content -->
+</div><!-- /app-shell -->
+
+<script>
+/* ═══════════════════════════════════════════════
+   BACKGROUND CANVAS — Anime energy particles
+═══════════════════════════════════════════════ */
+(function(){
+  const c = document.getElementById('bg-canvas');
+  const ctx = c.getContext('2d');
+  let W, H, pts = [];
+
+  function resize(){ W = c.width = innerWidth; H = c.height = innerHeight; }
+  window.addEventListener('resize', resize); resize();
+
+  const COLORS = ['#f5c842','#e63946','#00d4ff','#9b5de5','#06d6a0'];
+
+  function makeParticle(){
+    return {
+      x: Math.random()*W, y: Math.random()*H,
+      vx:(Math.random()-.5)*.5, vy:(Math.random()-.5)*.5,
+      r: Math.random()*2+.5,
+      a: Math.random()*.5+.05,
+      c: COLORS[Math.floor(Math.random()*COLORS.length)],
+      // glitch occasional
+      glitch: Math.random()<.05
+    };
+  }
+
+  for(let i=0;i<90;i++) pts.push(makeParticle());
+
+  // Occasional "energy burst" orbs
+  let orbs = [];
+  function makeOrb(){
+    if(orbs.length<3){
+      orbs.push({
+        x:Math.random()*W, y:Math.random()*H,
+        r:Math.random()*60+20,
+        a:0.06, c:COLORS[Math.floor(Math.random()*COLORS.length)],
+        life:1, decay:0.005
+      });
+    }
+  }
+  setInterval(makeOrb, 4000);
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+
+    // Draw orbs
+    orbs = orbs.filter(o=>{
+      o.life -= o.decay;
+      if(o.life<=0) return false;
+      const g = ctx.createRadialGradient(o.x,o.y,0,o.x,o.y,o.r);
+      g.addColorStop(0, o.c+'22');
+      g.addColorStop(1, 'transparent');
+      ctx.beginPath();
+      ctx.arc(o.x,o.y,o.r*o.life,0,Math.PI*2);
+      ctx.fillStyle = g;
+      ctx.fill();
+      return true;
+    });
+
+    // Particles
+    for(const p of pts){
+      if(p.glitch){ // draw "speed line" fragment
+        ctx.beginPath();
+        ctx.moveTo(p.x,p.y);
+        ctx.lineTo(p.x+p.vx*30,p.y+p.vy*30);
+        ctx.strokeStyle = p.c + '30';
+        ctx.lineWidth=1;
+        ctx.stroke();
+      } else {
+        ctx.beginPath();
+        ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+        ctx.fillStyle = p.c + Math.floor(p.a*255).toString(16).padStart(2,'0');
+        ctx.fill();
+      }
+      p.x+=p.vx; p.y+=p.vy;
+      if(p.x<0) p.x=W; if(p.x>W) p.x=0;
+      if(p.y<0) p.y=H; if(p.y>H) p.y=0;
+    }
+
+    // Connections
+    for(let i=0;i<pts.length;i++){
+      for(let j=i+1;j<pts.length;j++){
+        const d=Math.hypot(pts[i].x-pts[j].x,pts[i].y-pts[j].y);
+        if(d<110){
+          ctx.beginPath();
+          ctx.moveTo(pts[i].x,pts[i].y);
+          ctx.lineTo(pts[j].x,pts[j].y);
+          ctx.strokeStyle=`rgba(245,200,66,${.05*(1-d/110)})`;
+          ctx.lineWidth=.6; ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ═══════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════ */
+let S = {
+  tasks:[], goals:[], entries:[],
+  filter:'all', prio:'high', etype:'income',
+  power:false, blimit:0, page:'dashboard'
+};
+
+function save(){ localStorage.setItem('flowlife_anime_v1', JSON.stringify(S)); }
+function load(){
+  try{ const r=localStorage.getItem('flowlife_anime_v1'); if(r) S={...S,...JSON.parse(r)}; }catch(e){}
+}
+
+/* ═══════════════════════════════════════════════
+   UTILS
+═══════════════════════════════════════════════ */
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fmt(n){
+  n=Number(n)||0;
+  if(n>=100000) return (n/100000).toFixed(1)+'L';
+  if(n>=1000)   return (n/1000).toFixed(1)+'k';
+  return n.toLocaleString('en-IN');
+}
+function fmtDate(iso){ return new Date(iso).toLocaleDateString('en-IN',{day:'numeric',month:'short'}); }
+function timeGreet(){ const h=new Date().getHours(); return h<12?'Morning':h<17?'Afternoon':'Evening'; }
+
+/* TOAST */
+function toast(msg,type='i'){
+  const icons={s:'✅',e:'❌',i:'ℹ️',w:'⚠️'};
+  const el=document.createElement('div');
+  el.className=`toast ${type}`;
+  el.innerHTML=`<span>${icons[type]||'ℹ️'}</span><span>${msg}</span>`;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(()=>{ el.classList.add('out'); setTimeout(()=>el.remove(),350); },3000);
+}
+
+/* RIPPLE */
+document.addEventListener('click',e=>{
+  const b=e.target.closest('.btn');
+  if(!b) return;
+  const r=document.createElement('span');
+  r.className='ripple';
+  const rect=b.getBoundingClientRect(),sz=Math.max(rect.width,rect.height);
+  r.style.cssText=`width:${sz}px;height:${sz}px;left:${e.clientX-rect.left-sz/2}px;top:${e.clientY-rect.top-sz/2}px`;
+  b.appendChild(r);
+  setTimeout(()=>r.remove(),700);
+});
+
+/* ═══════════════════════════════════════════════
+   MODAL
+═══════════════════════════════════════════════ */
+function openModal(title,body){
+  document.getElementById('modal-title').textContent=title;
+  document.getElementById('modal-body').innerHTML=body;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal(){
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+document.getElementById('modal-overlay').addEventListener('click',e=>{
+  if(e.target===document.getElementById('modal-overlay')) closeModal();
+});
+
+/* ═══════════════════════════════════════════════
+   SIDEBAR
+═══════════════════════════════════════════════ */
+let sbCollapsed=false;
+function toggleSidebar(){
+  sbCollapsed=!sbCollapsed;
+  document.getElementById('sidebar').classList.toggle('collapsed',sbCollapsed);
+  document.getElementById('sb-toggle').textContent=sbCollapsed?'▶':'◀';
+}
+
+/* ═══════════════════════════════════════════════
+   PAGE ROUTING
+═══════════════════════════════════════════════ */
+const pageMap = {
+  dashboard:{ jp:'COMMAND CENTER',    title:'Command Board', add:'ADD TASK' },
+  tasks:    { jp:'QUEST LOG',         title:'Battle Tasks',  add:'ADD TASK' },
+  goals:    { jp:'DESTINY PATH',      title:'Grimoire Goals',add:'NEW GRIMOIRE' },
+  money:    { jp:'TREASURY LEDGER',   title:'Gold Ledger',   add:'LOG GOLD' },
+  email:    { jp:'MISSION BRIEFING',  title:'Daily Scroll',  add:'REFRESH' },
+  reflect:  { jp:'ARC REVIEW',        title:'Arc Analysis',  add:'GENERATE' },
+  budget:   { jp:'DEFENSE SYSTEM',    title:'Budget Shield', add:'SET LIMIT' }
+};
+
+function gotoPage(page, navEl){
+  S.page=page;
+  document.querySelectorAll('.page-view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const v=document.getElementById('pg-'+page);
+  if(v) v.classList.add('active');
+  if(navEl) navEl.classList.add('active');
+  const m=pageMap[page];
+  if(m){
+    document.getElementById('pg-jp').textContent=m.jp;
+    document.getElementById('pg-title').textContent=m.title;
+    document.getElementById('add-lbl').textContent=m.add;
+  }
+  if(page==='email') genEmail();
+  if(page==='reflect') genReflect();
+  if(page==='budget') renderBudget();
+  if(page==='dashboard') renderDash();
+}
+
+function topAdd(){
+  const p=S.page;
+  if(p==='dashboard'||p==='tasks'){ document.getElementById('task-in').focus(); if(p==='dashboard') gotoPage('tasks',null); }
+  else if(p==='goals') openGoalModal();
+  else if(p==='money') document.getElementById('en-desc').focus();
+  else if(p==='email') genEmail();
+  else if(p==='reflect') genReflect();
+  else if(p==='budget') document.getElementById('blimit').focus();
+}
+
+/* ═══════════════════════════════════════════════
+   DATE
+═══════════════════════════════════════════════ */
+function updateDate(){
+  const d=new Date();
+  document.getElementById('date-chip').textContent=d.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+}
+
+/* ═══════════════════════════════════════════════
+   POWER MODE
+═══════════════════════════════════════════════ */
+function togglePower(cb){
+  S.power=cb.checked; save();
+  document.getElementById('power-nav').style.display=S.power?'':'none';
+  const ss=document.getElementById('spark-section');
+  if(ss) ss.style.display=S.power?'block':'none';
+  toast(S.power?'⚡ Power Mode ACTIVATED — Oracle unlocked!':'Power Mode deactivated',S.power?'s':'i');
+  if(S.power && S.page==='dashboard') renderDash();
+}
+
+/* ═══════════════════════════════════════════════
+   TASKS
+═══════════════════════════════════════════════ */
+function setPrio(p){
+  S.prio=p;
+  document.querySelectorAll('.prio-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.p===p);
+  });
+}
+
+function addTask(){
+  const text=document.getElementById('task-in').value.trim();
+  if(!text){ toast('Enter a task name!','w'); return; }
+  const goalId=document.getElementById('task-goal-sel').value;
+  S.tasks.unshift({ id:Date.now(), text, done:false, prio:S.prio, goalId, at:new Date().toISOString() });
+  document.getElementById('task-in').value='';
+  save(); renderTasks(); updateBadge(); updateGoalProgress();
+  toast('⚔ Quest deployed!','s'); renderDash();
+}
+
+function toggleTask(id){
+  const t=S.tasks.find(x=>x.id===id); if(!t) return;
+  t.done=!t.done; save();
+  const el=document.querySelector(`[data-tid="${id}"]`);
+  if(el){ el.classList.add(t.done?'completing':''); setTimeout(()=>renderTasks(),t.done?450:0); }
+  else renderTasks();
+  updateBadge(); updateGoalProgress();
+  toast(t.done?'✓ Quest Complete! +XP':'Quest reopened',t.done?'s':'i');
+  renderDash();
+}
+
+function deleteTask(id){
+  const el=document.querySelector(`[data-tid="${id}"]`);
+  if(el){ el.classList.add('removing'); setTimeout(()=>{ S.tasks=S.tasks.filter(x=>x.id!==id); save(); renderTasks(); updateBadge(); renderDash(); },350); }
+  toast('Task removed','i');
+}
+
+function editTask(id){
+  const t=S.tasks.find(x=>x.id===id); if(!t) return;
+  const gopts=S.goals.map(g=>`<option value="${g.id}" ${t.goalId==g.id?'selected':''}>${esc(g.title)}</option>`).join('');
+  openModal('EDIT QUEST',`
+    <div class="form-group"><label class="form-label">Quest Name</label>
+      <input class="input-field" id="et-text" value="${esc(t.text)}"></div>
+    <div class="form-group"><label class="form-label">Priority Rank</label>
+      <div class="prio-selector" style="gap:12px;margin-top:4px">
+        <div class="prio-btn prio-high ${t.prio==='high'?'active':''}" data-ep="high" onclick="selEditP(this)"></div>
+        <div class="prio-btn prio-med  ${t.prio==='med'?'active':''}"  data-ep="med"  onclick="selEditP(this)"></div>
+        <div class="prio-btn prio-low  ${t.prio==='low'?'active':''}"  data-ep="low"  onclick="selEditP(this)"></div>
+      </div></div>
+    <div class="form-group"><label class="form-label">Linked Grimoire</label>
+      <select class="select-field" id="et-goal" style="width:100%"><option value="">None</option>${gopts}</select></div>
+    <button class="btn btn-gold" style="width:100%;margin-top:10px" onclick="saveTaskEdit(${id})">SAVE QUEST</button>
+  `);
+}
+function selEditP(el){
+  document.querySelectorAll('[data-ep]').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+}
+function saveTaskEdit(id){
+  const t=S.tasks.find(x=>x.id===id); if(!t) return;
+  const txt=document.getElementById('et-text').value.trim();
+  if(!txt){ toast('Task cannot be empty','w'); return; }
+  const pel=document.querySelector('[data-ep].active');
+  t.text=txt; t.prio=pel?pel.dataset.ep:t.prio;
+  t.goalId=document.getElementById('et-goal').value;
+  save(); renderTasks(); updateGoalProgress(); closeModal();
+  toast('Quest updated!','s');
+}
+
+function filterTasks(f,el){
+  S.filter=f;
+  document.querySelectorAll('.filter-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderTasks();
+}
+
+function renderTasks(){
+  const list=document.getElementById('task-list');
+  let tasks=S.tasks;
+  if(S.filter==='active') tasks=tasks.filter(t=>!t.done);
+  if(S.filter==='done')   tasks=tasks.filter(t=>t.done);
+  const cnt=tasks.length;
+  document.getElementById('task-count').textContent=`${cnt} QUEST${cnt!==1?'S':''}`;
+  if(!tasks.length){
+    list.innerHTML=`<div class="empty-state"><div class="empty-ico">⚔</div><div class="empty-ttl">NO QUESTS</div><div class="empty-sub">Deploy your first task above</div></div>`;
+    return;
+  }
+  const PCLS={high:'ph',med:'pm',low:'pl'};
+  list.innerHTML=tasks.map(t=>{
+    const goal=S.goals.find(g=>g.id==t.goalId);
+    const gtag=goal?`<span class="task-goal-tag">◎ ${esc(goal.title)}</span>`:'';
+    return `<div class="task-item ${PCLS[t.prio]||'pl'}" data-tid="${t.id}">
+      <div class="task-chk ${t.done?'done':''}" onclick="toggleTask(${t.id})">${t.done?'✓':''}</div>
+      <span class="task-text ${t.done?'done':''}">${esc(t.text)}</span>
+      ${gtag}
+      <div class="task-actions">
+        <button class="icon-btn" onclick="editTask(${t.id})">✎</button>
+        <button class="icon-btn del" onclick="deleteTask(${t.id})">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function updateBadge(){
+  const n=S.tasks.filter(t=>!t.done).length;
+  const b=document.getElementById('task-badge');
+  b.textContent=n; b.style.display=n>0?'':'none';
+}
+
+function updateGoalSelect(){
+  const sel=document.getElementById('task-goal-sel');
+  if(!sel) return;
+  sel.innerHTML='<option value="">No Grimoire</option>'+S.goals.map(g=>`<option value="${g.id}">${esc(g.title)}</option>`).join('');
+}
+
+/* ═══════════════════════════════════════════════
+   GOALS
+═══════════════════════════════════════════════ */
+function openGoalModal(editId=null){
+  const g=editId?S.goals.find(x=>x.id===editId):null;
+  openModal(g?'EDIT GRIMOIRE':'FORGE GRIMOIRE',`
+    <div class="form-group"><label class="form-label">Grimoire Title</label>
+      <input class="input-field" id="gt" placeholder="e.g. Master Swordsmanship" value="${g?esc(g.title):''}"></div>
+    <div class="form-group"><label class="form-label">Arc Type</label>
+      <div class="type-toggle" style="width:fit-content">
+        <button class="type-btn ${!g||g.type==='short'?'t-inc':''}" id="gtype-s" onclick="setGType('short')">SHORT ARC</button>
+        <button class="type-btn ${g&&g.type==='long'?'t-exp':''}"  id="gtype-l" onclick="setGType('long')">LONG ARC</button>
+      </div></div>
+    <div class="form-group"><label class="form-label">Description</label>
+      <input class="input-field" id="gdesc" placeholder="Your destiny..." value="${g?esc(g.desc||''):''}"></div>
+    <div class="form-group"><label class="form-label">₹ Treasure Target (optional)</label>
+      <input class="input-field" id="gsav" type="number" placeholder="e.g. 50000" value="${g&&g.savT?g.savT:''}"></div>
+    <input type="hidden" id="gtype-val" value="${g?g.type:'short'}">
+    <button class="btn btn-gold" style="width:100%;margin-top:10px" onclick="saveGoal(${editId||'null'})">${g?'SAVE GRIMOIRE':'FORGE GRIMOIRE'}</button>
+  `);
+}
+
+function setGType(t){
+  document.getElementById('gtype-val').value=t;
+  document.getElementById('gtype-s').className='type-btn '+(t==='short'?'t-inc':'');
+  document.getElementById('gtype-l').className='type-btn '+(t==='long'?'t-exp':'');
+}
+
+function saveGoal(editId){
+  const title=document.getElementById('gt').value.trim();
+  if(!title){ toast('Title required','w'); return; }
+  const type=document.getElementById('gtype-val').value;
+  const desc=document.getElementById('gdesc').value.trim();
+  const savT=parseFloat(document.getElementById('gsav').value)||0;
+  if(editId){
+    const g=S.goals.find(x=>x.id===editId);
+    if(g){ g.title=title; g.type=type; g.desc=desc; g.savT=savT; }
+    toast('Grimoire updated!','s');
+  } else {
+    S.goals.push({id:Date.now(),title,type,desc,savT,at:new Date().toISOString()});
+    toast('⚡ Grimoire forged!','s');
+  }
+  save(); renderGoals(); updateGoalSelect(); closeModal(); renderDash();
+}
+
+function deleteGoal(id){
+  const el=document.querySelector(`[data-gid="${id}"]`);
+  if(el){ el.classList.add('removing'); setTimeout(()=>{ S.goals=S.goals.filter(g=>g.id!==id); S.tasks.forEach(t=>{ if(t.goalId==id) t.goalId=''; }); save(); renderGoals(); updateGoalSelect(); renderDash(); },350); }
+  toast('Grimoire destroyed','i');
+}
+
+function goalProgress(id){
+  const ts=S.tasks.filter(t=>t.goalId==id);
+  if(!ts.length) return 0;
+  return Math.round(ts.filter(t=>t.done).length/ts.length*100);
+}
+
+function viewGoalTasks(id){
+  const g=S.goals.find(x=>x.id===id); if(!g) return;
+  const ts=S.tasks.filter(t=>t.goalId==id);
+  const PCLS={high:'ph',med:'pm',low:'pl'};
+  const body=ts.length?ts.map(t=>`<div class="task-item ${PCLS[t.prio]||'pl'}" style="margin-bottom:6px">
+    <div class="task-chk ${t.done?'done':''}">${t.done?'✓':''}</div>
+    <span class="task-text ${t.done?'done':''}">${esc(t.text)}</span>
+  </div>`).join(''):`<div class="empty-state"><div class="empty-ico">📋</div><div class="empty-ttl">NO LINKED TASKS</div></div>`;
+  openModal(`QUESTS: ${g.title}`,body);
+}
+
+function updateGoalProgress(){ renderGoals(); }
+
+function renderGoals(){
+  const grid=document.getElementById('goals-grid');
+  if(!S.goals.length){
+    grid.innerHTML=`<div class="empty-state" style="grid-column:1/-1"><div class="empty-ico">📖</div><div class="empty-ttl">NO GRIMOIRES YET</div><div class="empty-sub">Forge your first goal to begin your legend</div></div>`;
+    return;
+  }
+  const totalInc=S.entries.filter(e=>e.type==='income').reduce((s,e)=>s+e.amt,0);
+  const totalExp=S.entries.filter(e=>e.type==='expense').reduce((s,e)=>s+e.amt,0);
+  const savings=Math.max(0,totalInc-totalExp);
+
+  grid.innerHTML=S.goals.map(g=>{
+    const prog=goalProgress(g.id);
+    const tc=S.tasks.filter(t=>t.goalId==g.id).length;
+    const dc=S.tasks.filter(t=>t.goalId==g.id&&t.done).length;
+    let savHtml='';
+    if(g.savT>0){
+      const sp=Math.min(100,Math.round(savings/g.savT*100));
+      const circ=2*Math.PI*18;
+      const off=circ*(1-sp/100);
+      const col=sp>=100?'var(--jade)':'var(--electric)';
+      savHtml=`<div class="sav-ring" title="₹${fmt(savings)} / ₹${fmt(g.savT)}">
+        <svg viewBox="0 0 40 40" width="52" height="52">
+          <circle cx="20" cy="20" r="18" fill="none" stroke="var(--ink2)" stroke-width="4"/>
+          <circle cx="20" cy="20" r="18" fill="none" stroke="${col}" stroke-width="4" stroke-linecap="round"
+            transform="rotate(-90 20 20)" stroke-dasharray="${circ.toFixed(2)}" stroke-dashoffset="${off.toFixed(2)}"/>
+        </svg>
+        <div class="sav-ring-txt" style="color:${col}">${sp}%</div>
+      </div>`;
+    }
+    return `<div class="goal-card ${g.type}" data-gid="${g.id}">
+      <div class="goal-badge ${g.type==='short'?'badge-short':'badge-long'}">${g.type==='short'?'⚡ SHORT ARC':'🌟 LONG ARC'}</div>
+      <div class="goal-title">${esc(g.title)}</div>
+      ${g.desc?`<div style="font-size:13px;color:var(--text3);margin-bottom:10px">${esc(g.desc)}</div>`:''}
+      <div class="prog-wrap"><div class="prog-fill" style="width:${prog}%"></div></div>
+      <div class="prog-labels"><span>${prog}% CLEARED</span><span>${dc}/${tc} QUESTS</span></div>
+      <div class="goal-foot">
+        <span style="font-size:13px;color:var(--electric);cursor:pointer;font-weight:600" onclick="viewGoalTasks(${g.id})">📋 View Quests</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          ${savHtml}
+          <button class="icon-btn" onclick="openGoalModal(${g.id})">✎</button>
+          <button class="icon-btn del" onclick="deleteGoal(${g.id})">✕</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ═══════════════════════════════════════════════
+   MONEY TRACKER
+═══════════════════════════════════════════════ */
+let curType='income';
+
+function setType(t){
+  curType=t; S.etype=t;
+  document.getElementById('tb-inc').className='type-btn '+(t==='income'?'t-inc':'');
+  document.getElementById('tb-exp').className='type-btn '+(t==='expense'?'t-exp':'');
+}
+
+const CICONS={Food:'🍔',Transport:'🚗',Shopping:'🛍️',Bills:'💡',Health:'💊',Entertainment:'🎬',Salary:'💰',Freelance:'💻',Investment:'📈',Other:'📦'};
+
+function addEntry(){
+  const desc=document.getElementById('en-desc').value.trim();
+  const amt=parseFloat(document.getElementById('en-amt').value);
+  const cat=document.getElementById('en-cat').value;
+  if(!desc||!amt||amt<=0){ toast('Fill all fields!','w'); return; }
+  S.entries.unshift({id:Date.now(),desc,amt,cat,type:curType,at:new Date().toISOString()});
+  document.getElementById('en-desc').value='';
+  document.getElementById('en-amt').value='';
+  save(); renderEntries(); renderMoneyTotals(); renderCharts();
+  toast(curType==='income'?'💰 Gold gained!':'💸 Gold spent!','s');
+  renderDash();
+}
+
+function deleteEntry(id){
+  const el=document.querySelector(`[data-eid="${id}"]`);
+  if(el){ el.classList.add('removing'); setTimeout(()=>{ S.entries=S.entries.filter(e=>e.id!==id); save(); renderEntries(); renderMoneyTotals(); renderCharts(); renderDash(); },300); }
+  toast('Entry removed','i');
+}
+
+function renderMoneyTotals(){
+  const inc=S.entries.filter(e=>e.type==='income').reduce((s,e)=>s+e.amt,0);
+  const exp=S.entries.filter(e=>e.type==='expense').reduce((s,e)=>s+e.amt,0);
+  const bal=inc-exp;
+  document.getElementById('money-totals').innerHTML=`
+    <div class="money-card inc"><div class="money-val inc">₹${fmt(inc)}</div><div class="money-lbl">TOTAL INCOME</div></div>
+    <div class="money-card exp"><div class="money-val exp">₹${fmt(exp)}</div><div class="money-lbl">TOTAL EXPENSE</div></div>
+    <div class="money-card bal"><div class="money-val ${bal>=0?'bal-pos':'bal-neg'}">₹${fmt(Math.abs(bal))}</div><div class="money-lbl">${bal>=0?'NET SAVINGS':'NET DEFICIT'}</div></div>`;
+}
+
+function renderEntries(){
+  const list=document.getElementById('entry-list');
+  if(!S.entries.length){
+    list.innerHTML=`<div class="empty-state"><div class="empty-ico">💳</div><div class="empty-ttl">NO TRANSACTIONS</div></div>`;
+    return;
+  }
+  list.innerHTML=S.entries.map(e=>`
+    <div class="entry-item" data-eid="${e.id}">
+      <div class="entry-ico ${e.type==='income'?'i':'e'}">${CICONS[e.cat]||'📦'}</div>
+      <div class="entry-info">
+        <div class="entry-desc">${esc(e.desc)}</div>
+        <div class="entry-cat">${e.cat} · ${fmtDate(e.at)}</div>
+      </div>
+      <div class="entry-amt ${e.type==='income'?'i':'e'}">${e.type==='income'?'+':'-'}₹${fmt(e.amt)}</div>
+      <button class="icon-btn del" onclick="deleteEntry(${e.id})">✕</button>
+    </div>`).join('');
+}
+
+/* ═══════════════════════════════════════════════
+   CHARTS
+═══════════════════════════════════════════════ */
+let charts={bar:null,donutDash:null,donutMoney:null,trend:null};
+const COLS=['#00d4ff','#9b5de5','#f5c842','#e63946','#06d6a0','#ff85a1','#ffb700','#7efff5','#ff6b6b','#c77dff'];
+
+function catExpenses(){
+  const m={};
+  S.entries.filter(e=>e.type==='expense').forEach(e=>{ m[e.cat]=(m[e.cat]||0)+e.amt; });
+  return m;
+}
+
+function get7Days(){
+  const days=[];
+  for(let i=6;i>=0;i--){
+    const d=new Date(); d.setDate(d.getDate()-i);
+    const ds=d.toDateString();
+    const inc=S.entries.filter(e=>e.type==='income'&&new Date(e.at).toDateString()===ds).reduce((s,e)=>s+e.amt,0);
+    const exp=S.entries.filter(e=>e.type==='expense'&&new Date(e.at).toDateString()===ds).reduce((s,e)=>s+e.amt,0);
+    days.push({lbl:d.toLocaleDateString('en',{weekday:'short'}),inc,exp});
+  }
+  return days;
+}
+
+const BASE_CHART={
+  responsive:true, maintainAspectRatio:false,
+  plugins:{ legend:{ labels:{ color:'#8899bb', font:{family:'Rajdhani',size:12}, boxWidth:12, padding:12 } } }
+};
+
+function renderCharts(){
+  const cats=catExpenses();
+  const keys=Object.keys(cats), vals=Object.values(cats);
+  const days=get7Days();
+
+  // Bar
+  const bCtx=document.getElementById('bar-chart')?.getContext('2d');
+  if(bCtx){
+    if(charts.bar) charts.bar.destroy();
+    charts.bar=new Chart(bCtx,{
+      type:'bar',
+      data:{
+        labels:days.map(d=>d.lbl),
+        datasets:[
+          {label:'Income',data:days.map(d=>d.inc),backgroundColor:'rgba(6,214,160,0.7)',borderRadius:6,borderSkipped:false},
+          {label:'Expense',data:days.map(d=>d.exp),backgroundColor:'rgba(230,57,70,0.65)',borderRadius:6,borderSkipped:false}
+        ]
+      },
+      options:{...BASE_CHART,
+        scales:{
+          x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8899bb',font:{family:'Rajdhani'}}},
+          y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8899bb',font:{family:'Rajdhani'},callback:v=>'₹'+fmt(v)}}
+        }
+      }
+    });
+  }
+
+  // Donut dash
+  const ddCtx=document.getElementById('donut-dash')?.getContext('2d');
+  if(ddCtx){
+    if(charts.donutDash) charts.donutDash.destroy();
+    charts.donutDash=new Chart(ddCtx,{
+      type:'doughnut',
+      data:{
+        labels:keys.length?keys:['No data'],
+        datasets:[{data:vals.length?vals:[1],backgroundColor:keys.length?COLS:['#161b27'],borderWidth:0,spacing:3,borderRadius:6}]
+      },
+      options:{...BASE_CHART,cutout:'74%'}
+    });
+  }
+
+  // Donut money
+  const dmCtx=document.getElementById('donut-money')?.getContext('2d');
+  if(dmCtx){
+    if(charts.donutMoney) charts.donutMoney.destroy();
+    charts.donutMoney=new Chart(dmCtx,{
+      type:'doughnut',
+      data:{
+        labels:keys.length?keys:['No data'],
+        datasets:[{data:vals.length?vals:[1],backgroundColor:keys.length?COLS:['#161b27'],borderWidth:0,spacing:3,borderRadius:6}]
+      },
+      options:{...BASE_CHART,cutout:'68%'}
+    });
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   DASHBOARD
+═══════════════════════════════════════════════ */
+function renderDash(){
+  const active=S.tasks.filter(t=>!t.done).length;
+  const done=S.tasks.filter(t=>t.done).length;
+  const inc=S.entries.filter(e=>e.type==='income').reduce((s,e)=>s+e.amt,0);
+  const exp=S.entries.filter(e=>e.type==='expense').reduce((s,e)=>s+e.amt,0);
+  const reached=S.goals.filter(g=>goalProgress(g.id)===100).length;
+
+  document.getElementById('dash-stats').innerHTML=`
+    <div class="stat-card" onclick="gotoPage('tasks',null)" style="cursor:pointer">
+      <div class="corner-accent" style="background:rgba(0,212,255,0.2)"></div>
+      <div class="side-bar" style="background:var(--electric);box-shadow:0 0 8px var(--elec-glow)"></div>
+      <div class="stat-value" style="color:var(--electric)">${active}</div>
+      <div class="stat-label">ACTIVE QUESTS</div>
+      <div class="stat-sub up">↑ ${done} completed</div>
+    </div>
+    <div class="stat-card" onclick="gotoPage('goals',null)" style="cursor:pointer">
+      <div class="corner-accent" style="background:rgba(155,93,229,0.2)"></div>
+      <div class="side-bar" style="background:var(--magic2);box-shadow:0 0 8px var(--magic-glow)"></div>
+      <div class="stat-value" style="color:var(--magic2)">${S.goals.length}</div>
+      <div class="stat-label">GRIMOIRES FORGED</div>
+      <div class="stat-sub up">↑ ${reached} reached</div>
+    </div>
+    <div class="stat-card" onclick="gotoPage('money',null)" style="cursor:pointer">
+      <div class="corner-accent" style="background:rgba(6,214,160,0.2)"></div>
+      <div class="side-bar" style="background:var(--jade);box-shadow:0 0 8px rgba(6,214,160,0.4)"></div>
+      <div class="stat-value" style="color:var(--jade)">₹${fmt(inc)}</div>
+      <div class="stat-label">GOLD GAINED</div>
+      <div class="stat-sub up">↑ ${S.entries.filter(e=>e.type==='income').length} sources</div>
+    </div>
+    <div class="stat-card" onclick="gotoPage('money',null)" style="cursor:pointer">
+      <div class="corner-accent" style="background:rgba(230,57,70,0.2)"></div>
+      <div class="side-bar" style="background:var(--crimson);box-shadow:0 0 8px var(--crimson-glow)"></div>
+      <div class="stat-value" style="color:var(--crimson2)">₹${fmt(exp)}</div>
+      <div class="stat-label">GOLD SPENT</div>
+      <div class="stat-sub ${inc-exp>=0?'up':'dn'}">${inc-exp>=0?'↑ SAVING':'↓ DEFICIT'} ₹${fmt(Math.abs(inc-exp))}</div>
+    </div>`;
+
+  renderCharts();
+
+  // Power sparklines
+  if(S.power){
+    const ss=document.getElementById('spark-section');
+    if(ss) ss.style.display='block';
+    const sg=document.getElementById('spark-grid');
+    const days=get7Days();
+    const total=active+done;
+    const cr=total>0?Math.round(done/total*100):0;
+    const gAvg=S.goals.length?Math.round(S.goals.reduce((s,g)=>s+goalProgress(g.id),0)/S.goals.length):0;
+    const wExp=weekExp();
+    sg.innerHTML=`
+      <div class="spark-card"><div class="spark-title">COMPLETION RATE</div><div class="spark-val" style="color:var(--electric)">${cr}%</div><canvas id="sp1" height="40"></canvas></div>
+      <div class="spark-card"><div class="spark-title">NET BALANCE</div><div class="spark-val" style="color:${inc-exp>=0?'var(--jade)':'var(--crimson2)'}">₹${fmt(Math.abs(inc-exp))}</div><canvas id="sp2" height="40"></canvas></div>
+      <div class="spark-card"><div class="spark-title">GOAL PROGRESS</div><div class="spark-val" style="color:var(--magic2)">${gAvg}%</div><canvas id="sp3" height="40"></canvas></div>
+      <div class="spark-card"><div class="spark-title">WEEK SPENT</div><div class="spark-val" style="color:var(--crimson2)">₹${fmt(wExp)}</div><canvas id="sp4" height="40"></canvas></div>`;
+    // Draw sparklines
+    const scols=['#00d4ff','#06d6a0','#9b5de5','#e63946'];
+    const sdata=[
+      [10,20,15,cr-10,cr-5,cr+2,cr],
+      days.map(d=>d.inc-d.exp),
+      [5,15,25,35,45,gAvg-5,gAvg],
+      days.map(d=>d.exp)
+    ];
+    ['sp1','sp2','sp3','sp4'].forEach((id,i)=>{
+      const c=document.getElementById(id); if(!c) return;
+      new Chart(c.getContext('2d'),{
+        type:'line',
+        data:{labels:['','','','','','',''],datasets:[{data:sdata[i],borderColor:scols[i],borderWidth:2,tension:0.4,pointRadius:0,fill:true,backgroundColor:scols[i]+'18'}]},
+        options:{responsive:false,plugins:{legend:{display:false}},scales:{x:{display:false},y:{display:false}},animation:{duration:1000}}
+      });
+    });
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   EMAIL / SCROLL
+═══════════════════════════════════════════════ */
+const TIPS=[
+  'A warrior rests to fight stronger tomorrow.',
+  'Track every coin — awareness forges wealth.',
+  'The hardest quest done first unlocks the day.',
+  'Link every task to a goal — purpose fuels power.',
+  '₹50/day saved = ₹18,250/year treasured!'
+];
+
+function genEmail(){
+  const d=new Date();
+  const active=S.tasks.filter(t=>!t.done);
+  const done=S.tasks.filter(t=>t.done);
+  const inc=S.entries.filter(e=>e.type==='income').reduce((s,e)=>s+e.amt,0);
+  const exp=S.entries.filter(e=>e.type==='expense').reduce((s,e)=>s+e.amt,0);
+  const cats=catExpenses();
+  const topCats=Object.entries(cats).sort((a,b)=>b[1]-a[1]).slice(0,3);
+
+  const scroll=`╔══════════════════════════════════════╗
+  ⚔  FLOWLIFE DAILY SCROLL  ⚔
+  ${d.toDateString()}
+╚══════════════════════════════════════╝
+
+🌅 Good ${timeGreet()}, Warrior!
+
+━━━ ⚔ BATTLE REPORT ━━━━━━━━━━━━━━
+
+Active Quests (${active.length}):
+${active.length?active.slice(0,5).map((t,i)=>`  ${i+1}. [${t.prio.toUpperCase()}] ${t.text}`).join('\n'):'  ✓ All quests completed today!'}
+
+Completed Today:
+${done.length?done.slice(0,3).map(t=>`  ✓ ${t.text}`).join('\n'):'  — No completions yet'}
+
+━━━ 💰 TREASURY REPORT ━━━━━━━━━━━━
+
+  Gold Gained:   ₹${fmt(inc)}
+  Gold Spent:    ₹${fmt(exp)}
+  Net Treasure:  ₹${fmt(Math.abs(inc-exp))} ${inc>=exp?'(SURPLUS)':'(DEFICIT)'}
+
+Top Expenditures:
+${topCats.length?topCats.map(([c,v])=>`  ${CICONS[c]||'📦'} ${c}: ₹${fmt(v)}`).join('\n'):'  No expenses logged'}
+
+━━━ ◎ GRIMOIRE STATUS ━━━━━━━━━━━━━
+
+${S.goals.length?S.goals.slice(0,3).map(g=>`  ${goalProgress(g.id)===100?'✅':'⬡'} ${g.title} — ${goalProgress(g.id)}% CLEARED`).join('\n'):'  No grimoires forged yet'}
+
+━━━ 💡 ORACLE TIP ━━━━━━━━━━━━━━━━━
+
+  ${TIPS[d.getDay()%TIPS.length]}
+
+══════════════════════════════════════
+  ⚡ Keep pushing, your arc isn't over!
+══════════════════════════════════════`;
+
+  document.getElementById('email-box').textContent=scroll;
+}
+
+function copyEmail(){
+  navigator.clipboard.writeText(document.getElementById('email-box').textContent)
+    .then(()=>toast('📜 Scroll copied to clipboard!','s'));
+}
+
+/* ═══════════════════════════════════════════════
+   WEEKLY REFLECTION
+═══════════════════════════════════════════════ */
+function weekExp(){
+  const wa=new Date(Date.now()-7*24*60*60*1000);
+  return S.entries.filter(e=>e.type==='expense'&&new Date(e.at)>wa).reduce((s,e)=>s+e.amt,0);
+}
+
+function genReflect(){
+  const days=get7Days();
+  const wInc=days.reduce((s,d)=>s+d.inc,0);
+  const wExp=days.reduce((s,d)=>s+d.exp,0);
+  const done=S.tasks.filter(t=>t.done).length;
+  const total=S.tasks.length;
+
+  document.getElementById('ref-task-stats').innerHTML=`
+    <div class="stat-row"><span class="stat-row-lbl">Total Quests</span><span class="stat-row-val">${total}</span></div>
+    <div class="stat-row"><span class="stat-row-lbl">Completed</span><span class="stat-row-val" style="color:var(--jade)">${done}</span></div>
+    <div class="stat-row"><span class="stat-row-lbl">Active</span><span class="stat-row-val" style="color:var(--electric)">${S.tasks.filter(t=>!t.done).length}</span></div>
+    <div class="stat-row"><span class="stat-row-lbl">High Priority</span><span class="stat-row-val" style="color:var(--crimson2)">${S.tasks.filter(t=>t.prio==='high').length}</span></div>
+    <div class="stat-row"><span class="stat-row-lbl">Grimoires Active</span><span class="stat-row-val" style="color:var(--magic2)">${S.goals.length}</span></div>`;
+
+  document.getElementById('ref-gold-stats').innerHTML=`
+    <div class="stat-row"><span class="stat-row-lbl">Week Income</span><span class="stat-row-val" style="color:var(--jade)">₹${fmt(wInc)}</span></div>
+    <div class="stat-row"><span class="stat-row-lbl">Week Expense</span><span class="stat-row-val" style="color:var(--crimson2)">₹${fmt(wExp)}</span></div>
+    <div class="stat-row"><span class="stat-row-lbl">Net Week</span><span class="stat-row-val" style="color:${wInc-wExp>=0?'var(--electric)':'var(--crimson2)'}">₹${fmt(Math.abs(wInc-wExp))}</span></div>
+    <div class="stat-row"><span class="stat-row-lbl">Daily Avg Spend</span><span class="stat-row-val">₹${fmt(Math.round(wExp/7))}</span></div>
+    <div class="stat-row"><span class="stat-row-lbl">Total Entries</span><span class="stat-row-val">${S.entries.length}</span></div>`;
+
+  // Trend chart
+  const tCtx=document.getElementById('trend-chart')?.getContext('2d');
+  if(tCtx){
+    if(charts.trend) charts.trend.destroy();
+    charts.trend=new Chart(tCtx,{
+      type:'line',
+      data:{
+        labels:days.map(d=>d.lbl),
+        datasets:[
+          {label:'Income',data:days.map(d=>d.inc),borderColor:'#06d6a0',backgroundColor:'rgba(6,214,160,0.1)',borderWidth:2.5,tension:0.4,fill:true,pointBackgroundColor:'#06d6a0',pointRadius:4,pointHoverRadius:7},
+          {label:'Expense',data:days.map(d=>d.exp),borderColor:'#e63946',backgroundColor:'rgba(230,57,70,0.08)',borderWidth:2.5,tension:0.4,fill:true,pointBackgroundColor:'#e63946',pointRadius:4,pointHoverRadius:7}
+        ]
+      },
+      options:{...BASE_CHART,
+        scales:{
+          x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8899bb',font:{family:'Rajdhani'}}},
+          y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8899bb',font:{family:'Rajdhani'},callback:v=>'₹'+fmt(v)}}
+        }
+      }
+    });
+  }
+
+  // AI Oracle
+  const box=document.getElementById('ai-box');
+  box.innerHTML=`<div class="ai-badge">🤖 ORACLE ANALYSIS</div><div class="ai-dots"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div></div>`;
+  setTimeout(()=>{
+    const cr=total>0?Math.round(done/total*100):0;
+    const sr=wInc>0?Math.round((wInc-wExp)/wInc*100):0;
+    let txt='';
+    if(cr>=80) txt+=`🌟 LEGENDARY! You cleared ${cr}% of your quests — S-Rank performance! Your resolve rivals the Pirate King himself. `;
+    else if(cr>=50) txt+=`⚔ Solid combat record at ${cr}% completion. You're leveling up — focus your devil fruit power on high-priority quests. `;
+    else txt+=`⚡ Quest completion at ${cr}% — your grimoire has dormant power. Try the "2-minute jutsu" — if it takes under 2 min, do it NOW. `;
+    if(sr>=30) txt+=`💰 Your savings rate hits ${sr}% — Nami would approve! You're building a war chest worthy of the Grand Line. `;
+    else if(sr>=0) txt+=`💡 Saving ${sr}% of income this arc. Small leaks sink the thousand sunny — track daily spending more granularly. `;
+    else txt+=`🔴 Deficit arc detected! Your spending exceeded income. Review your top category and eliminate one unnecessary expenditure. `;
+    if(!S.goals.length) txt+=`🎯 No grimoires forged — you're fighting without a final goal! Create a goal now and link your quests to it.`;
+    else txt+=`◎ Tracking ${S.goals.length} grimoire${S.goals.length>1?'s':''} — link your remaining quests to goals for maximum power-up efficiency!`;
+    box.innerHTML=`<div class="ai-badge">🤖 ORACLE ANALYSIS</div><p class="ai-text">${txt}</p>`;
+  },2000);
+}
+
+/* ═══════════════════════════════════════════════
+   BUDGET SHIELD
+═══════════════════════════════════════════════ */
+function saveLimit(){
+  const v=parseFloat(document.getElementById('blimit').value);
+  if(!v||v<=0){ toast('Enter a valid limit','w'); return; }
+  S.blimit=v; save(); renderBudget();
+  toast(`🛡 Budget Shield set to ₹${fmt(v)}`,'s');
+}
+
+function renderBudget(){
+  const wE=weekExp();
+  const lim=S.blimit||0;
+  const pct=lim>0?Math.min(100,Math.round(wE/lim*100)):0;
+  const circ=452;
+  const off=circ*(1-pct/100);
+
+  let col='var(--jade)', alertCls='alert-safe', alertMsg='🛡 Shield at full power';
+  if(pct>=100){ col='var(--crimson)'; alertCls='alert-crit'; alertMsg='🚨 SHIELD BROKEN! Budget exceeded!'; }
+  else if(pct>=80){ col='var(--crimson2)'; alertCls='alert-dang'; alertMsg='⚠️ SHIELD CRACKING — 80% used!'; }
+  else if(pct>=60){ col='var(--warn)'; alertCls='alert-warn'; alertMsg='🟡 Shield at 60% — watch your gold!'; }
+
+  const arc=document.getElementById('budget-arc');
+  arc.setAttribute('stroke-dashoffset',off);
+  arc.setAttribute('stroke',col);
+  const bpct=document.getElementById('bpct');
+  bpct.textContent=pct+'%'; bpct.style.color=col;
+  const ba=document.getElementById('budget-alert');
+  ba.className=`alert-banner ${alertCls}`; ba.textContent=alertMsg;
+
+  if(S.blimit) document.getElementById('blimit').value=S.blimit;
+
+  // Category breakdown
+  const cats=catExpenses();
+  const sorted=Object.entries(cats).sort((a,b)=>b[1]-a[1]);
+  const total=Object.values(cats).reduce((s,v)=>s+v,0);
+  document.getElementById('bcat-list').innerHTML=sorted.length
+    ?sorted.map(([cat,val])=>{
+      const p=total>0?Math.round(val/total*100):0;
+      return `<div class="cat-bar-row">
+        <div class="cat-bar-lbl">${CICONS[cat]||'📦'} ${cat}</div>
+        <div class="cat-bar-wrap"><div class="cat-bar-fill" style="width:${p}%"></div></div>
+        <div class="cat-bar-val">₹${fmt(val)}</div>
+      </div>`;
+    }).join('')
+    :`<div class="empty-state" style="padding:20px"><div class="empty-ttl">NO EXPENSES YET</div></div>`;
+
+  // Goal-gold link
+  const inc=S.entries.filter(e=>e.type==='income').reduce((s,e)=>s+e.amt,0);
+  const exp=S.entries.filter(e=>e.type==='expense').reduce((s,e)=>s+e.amt,0);
+  const sav=Math.max(0,inc-exp);
+  const gw=S.goals.filter(g=>g.savT>0);
+  document.getElementById('goal-gold-link').innerHTML=gw.length
+    ?gw.map(g=>{
+      const p=Math.min(100,Math.round(sav/g.savT*100));
+      return `<div style="margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin-bottom:5px">
+          <span>${esc(g.title)}</span>
+          <span style="font-family:'Share Tech Mono',monospace;color:var(--text3)">₹${fmt(sav)}/₹${fmt(g.savT)}</span>
+        </div>
+        <div class="prog-wrap"><div class="prog-fill" style="width:${p}%"></div></div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);margin-top:3px;text-align:right">${p}% FUNDED</div>
+      </div>`;
+    }).join('')
+    :`<div style="font-size:13px;color:var(--text3);font-weight:500">No goals with ₹ targets. Add treasure targets to your grimoires!</div>`;
+}
+
+/* ═══════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════ */
+function init(){
+  load();
+  updateDate();
+  setInterval(updateDate,60000);
+
+  // Restore power mode
+  if(S.power){
+    document.getElementById('power-cb').checked=true;
+    document.getElementById('power-nav').style.display='';
+    const ss=document.getElementById('spark-section');
+    if(ss) ss.style.display='block';
+  }
+
+  if(S.blimit) document.getElementById('blimit').value=S.blimit;
+
+  setType(S.etype||'income');
+  setPrio(S.prio||'high');
+
+  renderTasks();
+  renderGoals();
+  renderEntries();
+  renderMoneyTotals();
+  updateGoalSelect();
+  updateBadge();
+  renderDash();
+
+  // Stagger nav items
+  document.querySelectorAll('.nav-item').forEach((el,i)=>{
+    el.style.opacity='0'; el.style.transform='translateX(-16px)';
+    setTimeout(()=>{ el.style.transition='all 0.4s cubic-bezier(0.4,0,0.2,1)'; el.style.opacity='1'; el.style.transform='none'; },100+i*60);
+  });
+
+  // Logo pulse on load
+  setTimeout(()=>{
+    const em=document.querySelector('.logo-emblem');
+    if(em){ em.style.transform='scale(1.3)'; setTimeout(()=>{ em.style.transition='transform 0.4s'; em.style.transform='scale(1)'; },300); }
+  },600);
+}
+
+init();
+</script>
+</body>
+</html>
